@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE concept
+  PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept xml:lang="en-us" id="concept2677">
+	<title>Hello Couchbase example</title>
+	<conbody>
+
+        <p>Now that you added the SDK dependency to your project, you can proceed and implement the classic "Hello World" example. Some important aspects are also covered along the way that will help you later.</p>
+
+        <p>The first thing you need to do is connect to the cluster:</p>
+
+        <codeblock outputclass="language-java">Cluster cluster = CouchbaseCluster.create();</codeblock>
+
+        <p>With no other arguments provided, this will logically bind it to a cluster where at least one node is reachable on <codeph>localhost</codeph>. This is a reasonable default to get started, but you can also pass in more/different seed nodes like this:</p>
+
+        <codeblock outputclass="language-java">Cluster cluster = CouchbaseCluster.create("192.168.56.101", "192.168.56.102");</codeblock>
+
+        <p>You do not need to pass in all nodes of the cluster, just a few seed nodes so that the client is able to establish initial contact. The actual process of connecting to a bucket (that is, opening sockets and everything related) happens when you call the <codeph>openBucket</codeph> method:</p>
+
+        <codeblock outputclass="language-java"><![CDATA[Observable<Bucket> bucketObservable = cluster.openBucket();]]></codeblock>
+
+        <p>This will connect to the <codeph>default</codeph> bucket and return an <codeph>Observable&lt;Bucket&gt;</codeph>. If you are not familiar with asynchronous programming be patient, it will get clear very soon. For now, just think of the <codeph>Observable</codeph> as the asynchronous cousin of a <codeph>Iterable</codeph> which will eventually reference our Bucket.</p>
+
+        <p>At the end of your code you need to shutdown the client to free all resources (sockets, threads,...), otherwise your app keeps running (because some threads are required to be non-daemon threads):</p>
+
+        <codeblock outputclass="language-java">cluster.disconnect().toBlocking().single();</codeblock>
+
+        <p>This disconnects all buckets and free associated ressources.</p>
+
+        <p>One way to get access to our <codeph>Bucket</codeph> object (so that you can perform data operations) is to block the current thread and wait until it is ready to be used:</p>
+
+        <codeblock outputclass="language-java">Bucket bucket = cluster.openBucket().toBlocking().single();</codeblock>
+        	
+        <p>If you are curious: the <codeph>Observable</codeph>  is converted into a <codeph>BlockingObservable</codeph>  and the code waits until a single value (our <codeph>Bucket</codeph> ) is ready to be used. Observables can also contain more than one values, which will come in handy later.</p>
+
+        <p>You now have a reference to the <codeph>Bucket</codeph> , so what are you waiting for? The SDK comes with built-in handling for JSON documents, which you can utilize right away. First, create a <codeph>JsonObject</codeph>  which contains information for a user.</p>
+
+<codeblock outputclass="language-java">JsonObject user = JsonObject.empty()
+    .put("firstname", "Walter")
+    .put("lastname", "White")
+    .put("job", "chemistry teacher")
+    .put("age", 50);</codeblock>
+
+        <p>A <codeph>JsonObject</codeph>  works very much like a <codeph>Map</codeph> , but it is designed to only let you insert values that can be stored as valid JSON (including nested objects and arrays). The resulting document will look like:</p>
+
+<codeblock outputclass="language-json">{
+    "firstname":"Walter",
+    "job":"chemistry teacher",
+    "age":50,
+    "lastname":"White"
+}</codeblock>
+
+        <p>To store the document, you can use the <codeph>upsert</codeph> method on the <codeph>bucket</codeph>. Note that since a Document on the server has more properties than just the content, you need to give it at least a unique document ID (like <codeph>walter</codeph>). The container for all this information is called a <codeph>Document</codeph> and since you are dealing with JSON you need to create a <codeph>JsonDocument</codeph>:</p>
+
+<codeblock outputclass="language-java"><![CDATA[JsonDocument doc = JsonDocument.create("walter", user);
+Observable<JsonDocument> response = bucket.upsert(doc);]]></codeblock>
+
+        <p>The <codeph>Document</codeph> is automatically converted into JSON and stored on the cluster. If the document (identified by its unique ID) already exists, it is replaced.</p>
+
+        <p>If you run the command as shown above, there is a good chance that the Document is not stored on the server. This is because <codeph>upsert</codeph> is an asynchronous operation as well and if your main thread doesn't wait for a response and just quits, the SDK doesn't get a chance to actually do its network calls. One way to mitigate this is to use <codeph>toBlocking().single()</codeph> again to make your current thread wait on the result:</p>
+
+<codeblock outputclass="language-java"><![CDATA[// Wait until the document is stored
+JsonDocument stored = response.toBlocking().single();
+
+// Print out the document ID that got stored
+System.out.println("Stored: " + stored.id());]]></codeblock>
+
+        <p>Note that <codeph>stored</codeph> is not the same <codeph>Document</codeph> which you passed into the <codeph>upsert</codeph> method. Once a successful response arrives from the server, a new one is created and populate with original and new values to properly reflect the new document state.</p>
+
+        <p>If you replace <codeph>upsert</codeph> with <codeph>insert</codeph> and try to insert the same document twice (with the same ID), you see the following:</p>
+
+<codeblock outputclass="language-java"><![CDATA[Exception in thread "main" com.couchbase.client.java.error.DocumentAlreadyExistsException
+    at com.couchbase.client.java.CouchbaseBucket$12.call(CouchbaseBucket.java:247)
+    at com.couchbase.client.java.CouchbaseBucket$12.call(CouchbaseBucket.java:243)
+    at rx.internal.operators.OperatorMap$1.onNext(OperatorMap.java:54)
+    at rx.subjects.SubjectSubscriptionManager$SubjectObserver.onNext(SubjectSubscriptionManager.java:224)
+    at rx.subjects.AsyncSubject.onCompleted(AsyncSubject.java:96)
+    at com.couchbase.client.core.ResponseHandler.onEvent(ResponseHandler.java:77)
+    at com.couchbase.client.core.ResponseHandler.onEvent(ResponseHandler.java:22)
+    at com.couchbase.client.deps.com.lmax.disruptor.BatchEventProcessor.run(BatchEventProcessor.java:128)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+    at java.lang.Thread.run(Thread.java:745)]]></codeblock>
+
+        <p>This provides two important clues:</p>
+
+        <ul>
+            <li><codeph>insert</codeph>, unlike <codeph>upsert</codeph> fails if the document already exists on the server (very much like the SQL <codeph>INSERT</codeph>
+              statement).</li>
+            <li>If you block on an <codeph>Observable</codeph>it can (and will) throw Exceptions in failure cases.
+              Error handling is an important part of an application and will be covered extensively throughout the documentation.</li>
+        </ul>
+
+        <p>Not surprisingly, you can also retreive a <codeph>Document</codeph> from the database. You do this by providing its ID:</p>
+
+<codeblock outputclass="language-java"><![CDATA[Observable<JsonDocument> response = bucket.get("walter");
+JsonDocument walter = response.toBlocking().single();
+System.out.println("Found: " + walter);]]></codeblock>
+
+        <p>This prints:</p>
+
+<codeblock outputclass="language-java"><![CDATA[Found: JsonDocument{id='walter', cas=3077475790214, expiry=0, content={"firstname":"Walter","job":"chemistry teacher","age":50,"lastname":"White"}}]]></codeblock>
+
+        <p>If you want to print only the age, you can reach into the content (much like you would access a `Map`):</p>
+
+        <codeblock outputclass="language-java"><![CDATA[System.out.println("Age: " + walter.content().getInt("age"));]]></codeblock>
+
+        <p>Now that you are an expert in storing and retreiving documents, you can combine both commands to implement something that is needed very often: loading a document, modifying its content and eventually storing the modified document.</p>
+
+        <p>First, here is one of the synchronous ways to do it:</p>
+
+<codeblock outputclass="language-java"><![CDATA[String id = "walter";
+JsonDocument loaded = bucket.get(id).toBlocking().singleOrDefault(null);
+if (loaded == null) {
+    System.err.println("Document not found!");
+} else {
+    loaded.content().put("age", 52);
+    JsonDocument updated = bucket.replace(loaded).toBlocking().single();
+    System.out.println("Updated: " + updated.id());
+}]]></codeblock>
+
+
+        <p>The code uses the <codeph>get</codeph> method to load the <codeph>Document</codeph>, wait until it arrives from the server (and return <codeph>null</codeph> as the default value if it does not exist). If it is not null, the content is modified and the document is stored again through the <codeph>replace</codeph> method. You can think of <codeph>replace</codeph> as the opposite to <codeph>insert</codeph>: if the document does not already exist, the call will fail.</p>
+
+        <p>If <codeph>single()</codeph> is used instead of <codeph>singleOrDefault()</codeph>, you will see an exception if the document does not exist (you can try that by using a different document ID than <codeph>walter</codeph>):</p>
+
+<codeblock outputclass="language-java"><![CDATA[Exception in thread "main" java.util.NoSuchElementException: Sequence contains no elements
+    at rx.internal.operators.OperatorSingle$1.onCompleted(OperatorSingle.java:82)
+    at rx.internal.operators.OperatorMap$1.onCompleted(OperatorMap.java:43)
+    at rx.internal.operators.OperatorFilter$1.onCompleted(OperatorFilter.java:42)
+    at rx.subjects.SubjectSubscriptionManager$SubjectObserver.onCompleted(SubjectSubscriptionManager.java:232)
+    at rx.subjects.AsyncSubject.onCompleted(AsyncSubject.java:97)
+    at com.couchbase.client.core.ResponseHandler.onEvent(ResponseHandler.java:77)
+    at com.couchbase.client.core.ResponseHandler.onEvent(ResponseHandler.java:22)
+    at com.couchbase.client.deps.com.lmax.disruptor.BatchEventProcessor.run(BatchEventProcessor.java:128)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+    at java.lang.Thread.run(Thread.java:745)]]></codeblock>
+
+        <p>Since the <codeph>Document</codeph> is not found, the <codeph>Observable</codeph> has nothing it can return to you.</p>
+
+        <p>The code shown above is completely synchronous, which means that your main thread will wait all the time until a response comes back from the server. It waits for network IO to happen while instead it could perform valuable work. This is where the whole idea of asynchronous application flows gets important. Instead of waiting and "pulling" the data out of the SDK, you can just keep going forward in your application flow and let the SDK notify you once it's done with work.</p>
+
+        <p><codeph>Observable</codeph>s are not just containers, they provide a large range of methods and functionality to create, combine and transform asynchronous workflows and make them look synchronous (while they aren't). This is important, because other approaches involve "callback hells" and complicated dealing with futures, especially if you want to "chain" more than one asynchronous operation together.</p>
+
+        <p>Here is the very same example, but completely non-blocking:</p>
+
+<codeblock outputclass="language-java"><![CDATA[bucket
+    .get("walter1")
+    .flatMap(new Func1<JsonDocument, Observable<JsonDocument>>() {
+        @Override
+        public Observable<JsonDocument> call(final JsonDocument loaded) {
+            loaded.content().put("age", 52);
+            return bucket.replace(loaded);
+        }
+    })
+    .subscribe(new Action1<JsonDocument>() {
+        @Override
+        public void call(final JsonDocument updated) {
+            System.out.println("Updated: " + updated.id());
+        }
+    });]]></codeblock>
+        
+
+        <p>Without going too much in-depth about how <codeph>Observables</codeph> work, it is not too hard to guess what is happening. The document is loaded through the <codeph>get</codeph> method and once it is done, the <codeph>flatMap</codeph> method is executed. This method changes the content and calls the <codeph>replace</codeph> method. Once the replace is done, the <codeph>Subscriber</codeph> is called and the line is printed. Note that we do not need to check for <codeph>null</codeph> here because the whole chain is just not executed if the document is not found in the first place.</p>
+
+        <p>The style shown above is Java6/7 with anonymous classes. If you are one of the happy ones to already use Java 8, you can replace the same code with lambdas to make it much nicer and succinct:</p>
+
+<codeblock outputclass="language-java"><![CDATA[bucket
+    .get("walter1")
+    .flatMap(loaded -> {
+        loaded.content().put("age", 52);
+        return bucket.replace(loaded);
+    })
+    .subscribe(updated -> System.out.println("Updated: " + updated.id()));]]></codeblock>
+
+        <p>Note that since this flow is asynchronous, every "callback" is run in a specific thread, different from your "main" one. Since this one-off example is different from long-running server applications (which are not shut down after one operation), it is a good idea to synchronize and wait once the last operation is finished.</p>
+
+        <p>A naive way is to add a <codeph>Thread.sleep(1000)</codeph> after the last call to keep the current thread alive for a second and hope that the operation is done:</p>
+
+<codeblock outputclass="language-java"><![CDATA[bucket
+    .get("walter1")
+    .flatMap(loaded -> {
+        loaded.content().put("age", 52);
+        return bucket.replace(loaded);
+    })
+    .subscribe(updated -> System.out.println("Updated: " + updated.id()));
+
+Thread.sleep(1000);]]></codeblock>
+
+        <p>Most of the time it will take much shorter, so you are just wasting time. And in the unlikely case that it takes longer, it doesn't work properly. So a much better way is the use of a <codeph>CountDownLatch</codeph>, which ships with the JDK. One thread counts it down and the other waits until its counted down:</p>
+
+<codeblock outputclass="language-java"><![CDATA[final CountDownLatch latch = new CountDownLatch(1);
+bucket
+    .get("walter1")
+    .flatMap(loaded -> {
+        loaded.content().put("age", 52);
+        return bucket.replace(loaded);
+    })
+    .subscribe(updated -> {
+        System.out.println("Updated: " + updated.id());
+        latch.countDown();
+    });
+
+latch.await();]]></codeblock>
+
+        <p>Unsurprisingly, this is also the preferred way on how to deal with asynchronous computation in unit tests and other scenarios where tight control between threads is needed.</p>
+
+        <p>Congratulations, you've completed your first steps towards Couchbase masterhood! We recommend you to either proceed with a full-blown tutorial application or browse through the rest of the documentation as you see fit.</p>
+	</conbody>
+</concept>

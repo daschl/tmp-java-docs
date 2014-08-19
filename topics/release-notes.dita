@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="concept_cn2_5ck_r4">
+ <title>Release notes</title>
+ <shortdesc>Release notes for Couchbase Java SDK 2.0 and above.</shortdesc>
+	
+	<concept id="dp3">
+		<title>Version 2.0 Developer Preview 3</title>
+		<shortdesc>Version 2.0.0-dp3 is the first developer preview release of Couchnode 2.0.0.</shortdesc>
+		
+		<concept id="dp3-enhance">
+			<title>Enhancements and behavioral changes</title>
+			<conbody>
+				<ul>
+					<li>There must be something different happening here.</li>
+				</ul>
+			</conbody>
+		</concept>
+		
+		<concept id="dp3-fix">
+			<title>Fixes</title>
+			<conbody>
+				<ul>
+					<li>Something must have been fixed.</li>
+				</ul>
+			</conbody>
+		</concept>
+		
+		<concept id="dp3-known">
+			<title>Known issues</title>
+			<conbody>
+				<ul><li>None.</li></ul>
+			</conbody>
+		</concept>
+		
+	</concept>
+
+	<concept id="dp2">
+		<title>Version 2.0 Developer Preview 2</title>
+		<shortdesc>Version 2.0.0-dp2 is the first developer preview release of Couchnode 2.0.0.</shortdesc>
+		
+		<concept id="dp2-enhance">
+			<title>Enhancements and behavioral changes</title>
+			<conbody>
+				<ul>
+					<li>There must be something different happening here.</li>
+				</ul>
+			</conbody>
+		</concept>
+		
+		<concept id="dp2-fix">
+			<title>Fixes</title>
+			<conbody>
+				<ul>
+					<li>Something must have been fixed.</li>
+				</ul>
+			</conbody>
+		</concept>
+		
+		<concept id="dp2-known">
+			<title>Known issues</title>
+			<conbody>
+				<ul><li>None.</li></ul>
+			</conbody>
+		</concept>
+		
+	</concept>
+
+
+	<concept id="dp1">
+		<title>Version 2.0 Developer Preview 1</title>
+		<shortdesc>Version 2.0.0-dp1 is the first developer preview release of Couchnode 2.0.0.</shortdesc>
+		
+		<concept id="dp1-enhance">
+			<title>Enhancements and behavioral changes</title>
+			<conbody>
+				<ul>
+					<li>There must be something different happening here.</li>
+				</ul>
+			</conbody>
+		</concept>
+		
+		<concept id="dp1-fix">
+			<title>Fixes</title>
+			<conbody>
+				<ul>
+					<li>Something must have been fixed.</li>
+				</ul>
+			</conbody>
+		</concept>
+		
+		<concept id="dp1-known">
+			<title>Known issues</title>
+			<conbody>
+				<ul><li>None.</li></ul>
+			</conbody>
+		</concept>
+		
+	</concept>
+	
+
+</concept>

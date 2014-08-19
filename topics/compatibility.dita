@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="concept_sjh_fhq_44">
+ <title>Compatibility</title>
+ <shortdesc>Compatibility between Couchbase Server and Couchbase Java SDK releases.</shortdesc>
+ <conbody>
+  <p>To take advantage of all features offered by Couchbase Server, you need to know what version of
+      the Java SDK provides compatibility for the features you want to use. The following matrix
+      shows which versions of the Couchbase Java SDK support the major features of each version of Couchbase
+      Server.</p>
+  <table frame="all" rowsep="1" colsep="1" id="table_qpl_ttq_44">
+   <title>The Matrix</title>
+   <tgroup cols="5">
+    <colspec colname="c1" colnum="1" colwidth="4.39*"/>
+    <colspec colname="c2" colnum="2" colwidth="4.29*"/>
+    <colspec colname="c3" colnum="3" colwidth="4.4*"/>
+    <colspec colname="c4" colnum="4" colwidth="4.35*"/>
+    <colspec colname="c5" colnum="5" colwidth="4.35*"/>
+    <thead>
+     <row>
+      <entry/>
+      <entry>Server 1.8</entry>
+      <entry>Server 2.0</entry>
+      <entry>Server 2.5</entry>
+      <entry>Server 3.0</entry>
+     </row>
+    </thead>
+    <tbody>
+      <row>
+        <entry>CRUD Operations</entry>
+        <entry namest="c2" nameend="c5">Since 1.0</entry>
+      </row>
+      <row>
+        <entry>View Querying APIs</entry>
+        <entry namest="c2" nameend="c5">Since 1.0</entry>
+      </row>
+
+      <row><entry namest="c1" nameend="c5"></entry></row>
+
+      <row>
+        <entry>Durability Requirements</entry>
+        <entry namest="c2" nameend="c5">Since 1.1</entry>
+      </row>
+      <row>
+        <entry>Carrier Publication Configuration</entry>
+        <entry namest="c2" nameend="c3">Not Supported</entry>
+        <entry namest="c4" nameend="c5">Since 1.4</entry>
+      </row>
+      <row>
+        <entry>SSL Connectivity</entry>
+        <entry namest="c2" nameend="c4">Not Supported</entry>
+        <entry>Since 2.0</entry>
+      </row>
+      <!--<row>
+        <entry>Transparent Compression</entry>
+        <entry namest="c2" nameend="c4">Not Supported</entry>
+        <entry>Since 2.0</entry>
+      </row>-->
+      <row>
+        <entry>Bulk Operations</entry>
+        <entry namest="c2" nameend="c5">Since 1.0</entry>
+      </row>
+      <!--<row>
+       <entry>Cross-SDK Data types</entry>
+       <entry>Not Supported</entry>
+       <entry namest="c3" nameend="c5">Since 2.0</entry>
+      </row>-->
+      <row>
+       <entry>N1QL Querying</entry>
+       <entry namest="c2" nameend="c5">Since 2.0</entry>
+      </row>
+
+      <row><entry namest="c1" nameend="c5"></entry></row>
+
+      <row>
+        <entry>Administrative API</entry>
+        <entry namest="c2" nameend="c5">Since 1.0</entry>
+      </row>
+    </tbody>
+   </tgroup>
+  </table>
+ </conbody>
+</concept>
