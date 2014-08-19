@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE concept
+  PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept xml:lang="en-us" id="concept2677">
+	<title>Mastering Observables</title>
+	<conbody>
+		<p>The following guide helps you getting up to speed with asynchronous programming and <codeph>Observables</codeph> in particular. This guide is not tied to the Java SDK exclusively and aims to give you a general understanding of how to build full stack asynchronous applications.</p>
+
+		<section>
+			<title>Motivation</title>
+
+			<p>Asynchronous and reactive methodologies allow you to better utilize system resources. Instead of wasting a thread waiting for network (or disk) IO, it can be fully utilized to perform other work instead.</p>
+
+			<p>A broad range of technologies exists to facilitate this style of programming, ranging from the very limited and not really usable java.util.concurrent.Future, to full blown libraries and runtimes like Akka (and everything in between). For a database driver, the following requirements must be met:</p>
+
+			<ul>
+				<li>Rich functionality</li>
+				<li>Interoperable and not opinionated</li>
+				<li>Performant</li>
+				<li>Small dependency and runtime footprint</li>
+			</ul>
+
+			<p>After evaluating the requirements and solutions closely, one library stood out: RxJava. It has a very rich set to compose asnychronous workflows, has no dependencies on its own and is used at high-profile companies like Netflix. The Rx model (more on that a little later) is mature and well-thought and the community is vibrant.</p>
+
+			<p>We hope that once you read through the introduction and get more familiar with the concept, you never want to go back. We certainly don't. That said, we fully support blocking operations as well, so you can still use a traditional blocking-based model if you absolutely want to.</p>
+
+			<p>The next section gradually introduces you into the world of Observables, the first step to reactive masterhood. If you want to learn more about the motivation, read on here.</p>
+		</section>
+
+		<section>
+			<title>Understanding Observables</title>
+
+			<p>You can think of a <codeph>Observable</codeph> as the push-based, asynchronous cousin ("dual") of the pull-based, synchronous <codeph>Iterable</codeph>. The contract of a <codeph>Observable</codeph> is that zero to N data events can happen, followed by a complete event. In addition, an error event can happen at any time, also completing the <codeph>Observable</codeph>.</p>
+
+			<table frame="all" rowsep="1" colsep="1" id="table_qpl_ttq_44">
+   <title>The Duality of Iterable &amp; Observable</title>
+
+   <tgroup cols="3">
+    <colspec colname="c1" colnum="1" colwidth="4.39*"/>
+    <colspec colname="c2" colnum="2" colwidth="4.29*"/>
+    <colspec colname="c3" colnum="3" colwidth="4.4*"/>
+    <thead>
+     <row>
+      <entry>Event</entry>
+      <entry>Iterable (Pull)</entry>
+      <entry>Observable (Push)</entry>
+     </row>
+    </thead>
+    <tbody>
+      <row>
+        <entry>retrieve data</entry>
+        <entry>T next()</entry>
+        <entry>onNext(T)</entry>
+      </row>
+      <row>
+        <entry>discover error</entry>
+        <entry>throws Exception</entry>
+        <entry>onError(Exception)</entry>
+      </row>
+      <row>
+        <entry>complete</entry>
+        <entry>returns</entry>
+        <entry>onCompleted()</entry>
+      </row>
+    </tbody>
+   </tgroup>
+</table>
+
+		</section>
+
+		<section>
+			<title>From Async to Sync</title>
+		</section>
+
+		<section>
+			<title>Creating Observables</title>
+		</section>
+
+		<section>
+			<title>Transforming Observables</title>
+		</section>
+
+		<section>
+			<title>Filtering Observables</title>
+		</section>
+
+		<section>
+			<title>Combining Observables</title>
+		</section>
+
+		<section>
+			<title>Schedulers</title>
+		</section>
+
+		<section>
+			<title>Subjects</title>
+		</section>
+
+		<section>
+			<title>Error Handling</title>
+		</section>
+
+	</conbody>
+</concept>

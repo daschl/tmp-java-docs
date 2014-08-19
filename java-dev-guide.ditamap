@@ -13,6 +13,10 @@
 		<topicref href="topics/hello-couchbase.dita" />
 	</topicref>
 
+	<topicref href="topics/observables.dita" />
+
 	<topicref href="topics/managing-connections.dita" />
+
+	<topicref href="topics/logging.dita" />
 
 </map>
