@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE concept
+  PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept xml:lang="en-us" id="concept2677">
+	<title>Working with Views</title>
+	<shortdesc>Describes how to query the bucket using Views.</shortdesc>
+	<conbody>
+		<p>When you query a view, you need to supply three params:</p>
+
+		<ul>
+			<li>The name of the design document</li>
+			<li>The name of the view</li>
+			<li>Optional query options.</li>
+		</ul>
+
+		<p>All of that is done through a DSL which you pass in to the <codeph>query()</codeph> method. The following example shows how to query a view on the <codeph>beer-sample</codeph> bucket and sets some options:</p>
+
+<codeblock outputclass="language-java"><![CDATA[Observable<ViewResult> result = bucket.query(
+    ViewQuery
+        .from("beer", "brewery_beers")
+        .descending()
+        .limit(10)
+);]]></codeblock>
+		
+		<p>The ViewResult contains the following properties:</p>
+
+		<ul>
+			<li><b>rows</b>: A potentially empty Observable with all the rows returned.</li>
+			<li><b>totalRows</b>: The total number of rows in that view.</li>
+			<li><b>success</b>: If the query was successful.</li>
+			<li><b>error</b>: contains the error msg if the query was not successful.</li>
+			<li><b>debug</b>: contains debug information if <codeph>debug()</codeph> was supplied.</li>
+		</ul>
+
+		<p>The following code queries the view, prints out the found document IDs if succeeded or the error message if failed:</p>
+
+<codeblock outputclass="language-java"><![CDATA[bucket
+    .query(ViewQuery.from("beer", "brewery_beers"))
+    .doOnNext(new Action1<ViewResult>() {
+        @Override
+        public void call(ViewResult viewResult) {
+            if (!viewResult.success()) {
+                System.err.println(viewResult.error());
+            }
+        }
+    })
+    .flatMap(new Func1<ViewResult, Observable<ViewRow>>() {
+        @Override
+        public Observable<ViewRow> call(ViewResult viewResult) {
+            return viewResult.rows();
+        }
+    })
+    .subscribe(new Action1<ViewRow>() {
+        @Override
+        public void call(ViewRow row) {
+            System.out.println(row.id());
+        }
+    });]]></codeblock>
+
+   		<p>Every <codeph>ViewRow</codeph> also has a <codeph>document()</codeph> method, which allows you to load the full document content if needed. If you are only interested in the document referenced by the row, you can use <codeph>flatMap()</codeph> to get directly to it:</p>
+
+<codeblock outputclass="language-java"><![CDATA[bucket
+    .query(ViewQuery.from("beer", "brewery_beers"))
+    .doOnNext(viewResult -> {
+        if (!viewResult.success()) {
+            System.err.println(viewResult.error());
+        }
+    })
+    .flatMap(ViewResult::rows)
+    .flatMap(ViewRow::document)
+    .subscribe(System.out::println);]]></codeblock>
+
+	</conbody>
+</concept>

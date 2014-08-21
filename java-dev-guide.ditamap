@@ -13,10 +13,24 @@
 		<topicref href="topics/hello-couchbase.dita" />
 	</topicref>
 
-	<topicref href="topics/observables.dita" />
-
+	
 	<topicref href="topics/managing-connections.dita" />
+	<topicref href="topics/documents.dita">
+		<topicref href="topics/documents-basics.dita" />
+		<topicref href="topics/documents-creating.dita" />
+		<topicref href="topics/documents-updating.dita" />
+		<topicref href="topics/documents-retrieving.dita" />
+		<topicref href="topics/documents-deleting.dita" />
+		<topicref href="topics/documents-atomic.dita" />
+		<!--<topicref href="topics/documents-custom.dita" />-->
+	</topicref>
 
+	<topicref href="topics/querying.dita">
+		<topicref href="topics/querying-views.dita" />
+		<topicref href="topics/querying-n1ql.dita" />
+	</topicref>
+
+	<topicref href="topics/observables.dita" />
 	<topicref href="topics/logging.dita" />
 
 </map>

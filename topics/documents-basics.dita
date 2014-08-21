@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE concept
+  PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept xml:lang="en-us" id="concept2677">
+	<title>Document Basics</title>
+	<shortdesc>Describes the properties and types of Documents.</shortdesc>
+	<conbody>
+
+		<section>
+			<title>The Document</title>
+
+			<p>A instance of a <codeph>Document</codeph> represents everything associated with a document stored in a Couchbase Server bucket. This does not only include the document ID and its content, but also other properties. These are:</p>
+
+			<table>
+				<tgroup cols="3">
+					<thead>
+						<row>
+							<entry>Name</entry>
+							<entry>Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry><codeph>id</codeph></entry>
+							<entry>The unique ID of the document.</entry>
+						</row>
+						<row>
+							<entry><codeph>content</codeph></entry>
+							<entry>The content of the document.</entry>
+						</row>
+						<row>
+							<entry><codeph>cas</codeph></entry>
+							<entry>The CAS (Compare And Swap) value of the document.</entry>
+						</row>
+						<row>
+							<entry><codeph>expiry</codeph></entry>
+							<entry>The expiration time of the document.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+
+			<p>There are a few different implementations of a <codeph>Document</codeph>, the most prominent one is the <codeph>JsonDocument</codeph>.</p>
+		</section>
+
+		<section>
+			<title>JsonDocument and JSON</title>
+
+			<p>Couchbase Server uses the JSON format as a first-class citizen. It is used for querying (both Views and N1QL) and represents the main storage format that should be used. Others are also supported, but they should only be used if no advanced querying is needed (apart from ID lookups).</p>
+
+			<p>The <codeph>JsonDocument</codeph> has factory methods named <codeph>create()</codeph> in various ways, depending on the needs. If you do not want to pass in an expiration time or CAS value (just the ID and content) you do it like this:</p>
+
+<codeblock outputclass="language-java"><![CDATA[JsonDocument doc = JsonDocument.create("id", content);]]></codeblock>
+
+			<p>The content needs to be of type <codeph>JsonObject</codeph>, which ships with the Java SDK. It works very much like a <codeph>Map</codeph>, but makes sure only data types understood by JSON are used.</p>
+
+			<p>An empty JSON document can be created with:</p>
+
+<codeblock outputclass="language-java"><![CDATA[JsonObject content = JsonObject.empty();]]></codeblock>
+
+			<p>Once it is created, you can use the various <codeph>put</codeph> methods to insert data:</p>
+
+<codeblock outputclass="language-java"><![CDATA[JsonArray friends = JsonArray.empty()
+    .add(JsonObject.empty().put("name", "Mike Ehrmantraut"))
+    .add(JsonObject.empty().put("name", "Jesse Pinkman"));
+
+JsonObject content = JsonObject.empty()
+    .put("firstname", "Walter")
+    .put("lastname", "White")
+    .put("age", 52)
+    .put("aliases", JsonArray.from("Walt Jackson", "Mr. Mayhew", "David Lynn"))
+    .put("friends", friends);]]></codeblock>
+
+    		<p>This generates a JSON document like this (unordered, because the actual content is stored in a <codeph>Map</codeph>):</p>
+
+<codeblock outputclass="language-javascript"><![CDATA[{
+   "firstname":"Walter",
+   "aliases":[
+      "Walt Jackson",
+      "Mr. Mayhew",
+      "David Lynn"
+   ],
+   "age":52,
+   "friends":[
+      {
+         "name":"Mike Ehrmantraut"
+      },
+      {
+         "name":"Jesse Pinkman"
+      }
+   ],
+   "lastname":"White"
+}]]></codeblock>
+
+		<p>In addition, the <codeph>JsonObject</codeph> and <codeph>JsonArray</codeph> provide convenience methods to generate and modify them.</p>
+
+		<p>The <codeph>JsonDocument</codeph> can then be passed into the various operations on the <codeph>Bucket</codeph>:</p>
+
+<codeblock outputclass="language-java"><![CDATA[JsonDocument walter = JsonDocument.create("user:walter", content);
+Observable<JsonDocument> inserted = bucket.insert(walter);]]></codeblock>
+
+		<p>If you want to read values out of the <codeph>JsonDocument</codeph>, you can use the either typed or untyped getter methods.</p>
+
+<codeblock outputclass="language-java"><![CDATA[int age = content.getInt("age");
+String name = content.getString("firstname") + content.getString("lastname");]]></codeblock>
+
+		<p><note>If you are accessing values which potentially do not exist, you need to use boxed values (Integer, Long, Boolean) instead of their unboxed variants (int, long, boolean) if you do not want to get <codeph>NullPointerExceptions</codeph>. If you use unboxed variants, make sure to catch them properly.</note></p>
+
+		</section>
+
+		<section>
+			<title>LegacyDocument</title>
+
+			<p>The <codeph>LegacyDocument</codeph> has been added to support backwards-compatible interaction for documents which were and are stored by the Java SDK of the 1.* series.</p>
+
+			<p>It's behavior is very similar to the <codeph>JsonDocument</codeph>, but it doesn't take a <codeph>JsonObject</codeph> but instead a generic <codeph>Object</codeph>. Depending on the actual content, it is encoded/decoded and all important flags set, as well as compression handled.</p>
+
+			<p>You can also use it to store strings directly, or POJOs which implement <codeph>Serializable</codeph>.</p>
+
+<codeblock outputclass="language-java"><![CDATA[LegacyDocument.create("docid", "Hello World");]]></codeblock>
+
+		</section>
+
+		<section>
+			<title>Expiration &amp; CAS</title>
+
+			<p>Every <codeph>Document</codeph> also contains the <codeph>expiry</codeph> and <codeph>cas</codeph> properties. They are considered meta information and are also optional. An expiration time of <codeph>0</codeph> means that no expiration is set at all, and a <codeph>CAS</codeph> value 0 means it won't be used.</p>
+
+			<p>The <codeph>expiry</codeph> can be set by you to control the expiration time when the document is stored:</p>
+
+// Expire in 10 seconds.
+JsonDocument.create("id", 10, content);
+
+			<p>The <codeph>CAS</codeph> value can either be set by you directly or is populated by the SDK when the <codeph>Document</codeph> is loaded from the server (which is the recommended way to use it).</p>
+
+		</section>
+
+	</conbody>
+</concept>
