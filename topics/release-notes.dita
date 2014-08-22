@@ -2,7 +2,7 @@
 <!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
 <concept id="concept_cn2_5ck_r4">
  <title>Release notes</title>
- <shortdesc>Release notes for Couchbase Java SDK 2.0 and above.</shortdesc>
+ <shortdesc>Release notes for Couchbase Java SDK 2.0.</shortdesc>
 	
 	<concept id="dp3">
 		<title>Version 2.0 Developer Preview 3</title>

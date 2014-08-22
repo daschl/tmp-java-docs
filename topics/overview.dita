@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
 <concept id="concept_z3r_zgq_44">
-	<title>Couchbase Java SDK Overview</title>
+	<title>Couchbase Java SDK overview</title>
 	<shortdesc>The Couchbase Java SDK enables you to interact with a Couchbase
 		Server cluster from a Java or Java-compatible application.</shortdesc>
 	<conbody>

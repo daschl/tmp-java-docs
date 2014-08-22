@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
 <map>
-  <title>Node.js Developer Guide 2.0</title>
+  <title>Java Developer Guide 2.0</title>
 	<topicref href="topics/overview.dita">
 		<topicref href="topics/compatibility.dita" />
 			<topicref href="topics/release-notes.dita" />

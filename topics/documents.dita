@@ -2,7 +2,7 @@
 <!DOCTYPE concept
   PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
 <concept xml:lang="en-us" id="concept2677">
-	<title>Working with Documents</title>
+	<title>Working with documents</title>
 	<conbody>
 		<p>This topic covers the basic CRUD operations of creating, retrieving, updating, and deleting documents. It also describes the properties of Documents and their different implementations.</p>
 	</conbody>
