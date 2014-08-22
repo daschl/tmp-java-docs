@@ -5,6 +5,6 @@
 	<title>Getting Started</title>
 	<conbody>
 		<p>
-This getting started guide acts as a foundational introduction into the Couchbase Java SDK. You learn how to install it properly and write a basic sample application that highlights important aspects. At the end of this guide you are able to start exploring further documentation on your own or proceed with a tutorial where a full-blown, production grade application is built.</p>
+This getting started guide acts as a foundational introduction into the Couchbase Java SDK. You learn how to install it properly and write a basic sample application that highlights important aspects. At the end of this guide you are able to start exploring further documentation on your own or proceed with a tutorial where a complete, production-grade application is built.</p>
 	</conbody>
 </concept>

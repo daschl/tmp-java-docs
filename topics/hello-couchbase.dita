@@ -11,7 +11,9 @@
 
         <codeblock outputclass="language-java">Cluster cluster = CouchbaseCluster.create();</codeblock>
 
-        <p>With no other arguments provided, this will logically bind it to a cluster where at least one node is reachable on <codeph>localhost</codeph>. This is a reasonable default to get started, but you can also pass in more/different seed nodes like this:</p>
+        <p>With no other arguments provided, this will logically bind it to a cluster where at least
+			one node is reachable on <codeph>localhost</codeph>. This is a reasonable default to get
+			started, but you can also pass in one or more seed nodes like this:</p>
 
         <codeblock outputclass="language-java">Cluster cluster = CouchbaseCluster.create("192.168.56.101", "192.168.56.102");</codeblock>
 
@@ -19,21 +21,25 @@
 
         <codeblock outputclass="language-java"><![CDATA[Observable<Bucket> bucketObservable = cluster.openBucket();]]></codeblock>
 
-        <p>This will connect to the <codeph>default</codeph> bucket and return an <codeph>Observable&lt;Bucket&gt;</codeph>. If you are not familiar with asynchronous programming be patient, it will get clear very soon. For now, just think of the <codeph>Observable</codeph> as the asynchronous cousin of a <codeph>Iterable</codeph> which will eventually reference our Bucket.</p>
+        <p>This connects to the <codeph>default</codeph> bucket and returns an
+				<codeph>Observable&lt;Bucket&gt;</codeph> object. If you are not familiar with asynchronous
+			programming be patient, it will get clear very soon. For now, just think of the
+				<codeph>Observable</codeph> as the asynchronous cousin of an <codeph>Iterable</codeph>
+			that will eventually reference the bucket.</p>
 
-        <p>At the end of your code you need to shutdown the client to free all resources (sockets, threads,...), otherwise your app keeps running (because some threads are required to be non-daemon threads):</p>
+        <p>At the end of your code you need to shut down the client to free all resources (sockets, threads, and so on). If you don't shut it down, your app keeps running because some threads are required to be non-daemon threads. The following code shuts down the client:</p>
 
         <codeblock outputclass="language-java">cluster.disconnect().toBlocking().single();</codeblock>
 
-        <p>This disconnects all buckets and free associated ressources.</p>
+        <p>This disconnects all buckets and frees associated resources.</p>
 
-        <p>One way to get access to our <codeph>Bucket</codeph> object (so that you can perform data operations) is to block the current thread and wait until it is ready to be used:</p>
+        <p>One way to get access to the <codeph>Bucket</codeph> object (so you can perform data operations) is to block the current thread and wait until it is ready to be used:</p>
 
         <codeblock outputclass="language-java">Bucket bucket = cluster.openBucket().toBlocking().single();</codeblock>
         	
-        <p>If you are curious: the <codeph>Observable</codeph>  is converted into a <codeph>BlockingObservable</codeph>  and the code waits until a single value (our <codeph>Bucket</codeph> ) is ready to be used. Observables can also contain more than one values, which will come in handy later.</p>
+        <p>If you are curious: the <codeph>Observable</codeph>  is converted into a <codeph>BlockingObservable</codeph> and the code waits until a single value (the <codeph>Bucket</codeph> ) is ready to be used. Observables can also contain more than one value, which will come in handy later.</p>
 
-        <p>You now have a reference to the <codeph>Bucket</codeph> , so what are you waiting for? The SDK comes with built-in handling for JSON documents, which you can utilize right away. First, create a <codeph>JsonObject</codeph>  which contains information for a user.</p>
+        <p>You now have a reference to the <codeph>Bucket</codeph>, so you can begin working with it. The SDK comes with built-in handling for JSON documents, which you can use right away. First, create a <codeph>JsonObject</codeph>, which contains information for a user.</p>
 
 <codeblock outputclass="language-java">JsonObject user = JsonObject.empty()
     .put("firstname", "Walter")
@@ -41,7 +47,7 @@
     .put("job", "chemistry teacher")
     .put("age", 50);</codeblock>
 
-        <p>A <codeph>JsonObject</codeph>  works very much like a <codeph>Map</codeph> , but it is designed to only let you insert values that can be stored as valid JSON (including nested objects and arrays). The resulting document will look like:</p>
+        <p>A <codeph>JsonObject</codeph> works very much like a <codeph>Map</codeph>, but it is designed to only let you insert values that can be stored as valid JSON (including nested objects and arrays). The resulting document looks like this:</p>
 
 <codeblock outputclass="language-json">{
     "firstname":"Walter",
@@ -50,7 +56,7 @@
     "lastname":"White"
 }</codeblock>
 
-        <p>To store the document, you can use the <codeph>upsert</codeph> method on the <codeph>bucket</codeph>. Note that since a Document on the server has more properties than just the content, you need to give it at least a unique document ID (like <codeph>walter</codeph>). The container for all this information is called a <codeph>Document</codeph> and since you are dealing with JSON you need to create a <codeph>JsonDocument</codeph>:</p>
+        <p>To store the document, you can use the <codeph>upsert</codeph> method on the <codeph>bucket</codeph>. Because a document on the server has more properties than just the content, you need to give it at least a unique document ID (for example, <codeph>walter</codeph>). The container for all this information is called a <codeph>Document</codeph> and because you are dealing with JSON you need to create a <codeph>JsonDocument</codeph>:</p>
 
 <codeblock outputclass="language-java"><![CDATA[JsonDocument doc = JsonDocument.create("walter", user);
 Observable<JsonDocument> response = bucket.upsert(doc);]]></codeblock>
@@ -91,7 +97,7 @@ System.out.println("Stored: " + stored.id());]]></codeblock>
               Error handling is an important part of an application and will be covered extensively throughout the documentation.</li>
         </ul>
 
-        <p>Not surprisingly, you can also retreive a <codeph>Document</codeph> from the database. You do this by providing its ID:</p>
+        <p>Not surprisingly, you can also retrieve a <codeph>Document</codeph> from the database. You do this by providing its ID:</p>
 
 <codeblock outputclass="language-java"><![CDATA[Observable<JsonDocument> response = bucket.get("walter");
 JsonDocument walter = response.toBlocking().single();
