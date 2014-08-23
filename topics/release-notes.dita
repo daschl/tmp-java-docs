@@ -4,6 +4,9 @@
  <title>Release notes</title>
  <shortdesc>Release notes for Couchbase Java SDK 2.0.</shortdesc>
 	
+	<conbody><note type="note">Release notes coming soon!</note></conbody>
+	<!--
+	
 	<concept id="dp3">
 		<title>Version 2.0 Developer Preview 3</title>
 		<shortdesc>Version 2.0.0-dp3 is the first developer preview release of Couchnode 2.0.0.</shortdesc>
@@ -98,5 +101,5 @@
 		
 	</concept>
 	
-
+-->
 </concept>
