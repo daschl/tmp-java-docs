@@ -11,8 +11,8 @@
 		<codeblock outputclass="language-xml"><![CDATA[<dependencies>
     <dependency>
         <groupId>com.couchbase.client</groupId>
-        <artifactId>couchbase-client</artifactId>
-        <version>2.0.0-beta</version>
+        <artifactId>java-client</artifactId>
+        <version>2.0.0-beta2</version>
     </dependency>
 </dependencies>
 

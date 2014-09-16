@@ -12,12 +12,12 @@
 				followed by one or more calls to openBucket():</p>
 
 <codeblock outputclass="language-java"><![CDATA[Cluster cluster = CouchbaseCluster.create();
-Observable<Bucket> bucketObservable = cluster.openBucket();]]></codeblock>
+Bucket bucket = cluster.openBucket();]]></codeblock>
 
 			<p>If no further arguments are applied, this code connects to <codeph>localhost</codeph> and opens the default bucket. While this is suitable for development, you most probably want to connect to a remote cluster and also a different bucket (with a password):</p>
 
 <codeblock outputclass="language-java"><![CDATA[Cluster cluster = CouchbaseCluster.create("192.168.56.101", "192.168.56.102");
-Observable<Bucket> bucketObservable = cluster.openBucket("myapp", "password");]]></codeblock>
+Bucket bucket = cluster.openBucket("myapp", "password");]]></codeblock>
 
 <p>Alternatively, a list of nodes can be passed in:</p>
 
@@ -28,8 +28,8 @@ Cluster cluster = CouchbaseCluster.create(nodes);]]></codeblock>
 
 <p>More buckets can be open at the same time if needed:</p>
 
-<codeblock outputclass="language-java"><![CDATA[Observable<Bucket> bucket1 = cluster.openBucket("bucket1", "password");
-Observable<Bucket> bucket2 = cluster.openBucket("bucket2", "password");]]></codeblock>
+<codeblock outputclass="language-java"><![CDATA[Bucket bucket1 = cluster.openBucket("bucket1", "password");
+Bucket bucket2 = cluster.openBucket("bucket2", "password");]]></codeblock>
 
 <p>If more than one bucket is open at a time, the underlying "core-io" module makes sure to utilize
 				the resources as best as possible, that is sharing sockets, thread pools and so on.</p>
@@ -45,9 +45,33 @@ Observable<Bucket> bucket2 = cluster.openBucket("bucket2", "password");]]></code
 
 <p>If the underlying environment is not shared the application will continue to work, but a Warning is raised in the logs:</p>
 
-<codeblock outputclass="language-java"><![CDATA[WARNING: More than 1 Couchbase Environments found, this can have severe impact on performance and stability. Reuse environments!]]></codeblock>
+<codeblock outputclass="language-java"><![CDATA[WARNING: More than 1 Couchbase Environments found (N), this can have severe impact on performance and stability. Reuse environments!]]></codeblock>
 
 <p>In general this is an indication of misconfiguration, the only exception being unit and integration tests where multiple paths are executed at once and cannot share the ClusterEnvironment for whatever reason.</p>
+
+		</section>
+		<section>
+			<title>Connecting Asynchronously</title>
+
+			<p>Ever synchronous API is just a wrapper around an asynchronous one. In order to get to it, there are two ways:</p>
+
+			<ul>
+				<li>Use <codeph>async()</codeph> on the interface to access its <codeph>Async*</codeph> counterpart.</li>
+				<li>Instantiate a <codeph>CouchbaseAsyncCluster</codeph> in the first place.</li>
+			</ul>
+
+			<p>So if you are connecting to the bucket synchronously but then want to switch over to asynchronous data ops you can do it like this:</p>
+
+<codeblock outputclass="language-java"><![CDATA[Cluster cluster = CouchbaseCluster.create();
+Bucket bucket = cluster.openBucket();
+
+// Same API as Bucket, but completely async with Observables
+AsyncBucket asyncBucket = bucket.async();]]></codeblock>
+
+			<p>On the other hand, you can use the Async API right from the beginning:</p>
+
+<codeblock outputclass="language-java"><![CDATA[AsyncCluster cluster = CouchbaseAsyncCluster.create();
+Observable<AsyncBucket> bucketObservable = cluster.openBucket();]]></codeblock>
 
 		</section>
 		<section>
@@ -56,18 +80,19 @@ Observable<Bucket> bucket2 = cluster.openBucket("bucket2", "password");]]></code
 <p>The most common case is to disconnect the whole <codeph>CouchbaseCluster</codeph> from the server, which has the same effect as closing all buckets manually.</p>
 
 
-<codeblock outputclass="language-java"><![CDATA[Observable<Boolean> disconnect = cluster.disconnect();]]></codeblock>
+<codeblock outputclass="language-java"><![CDATA[Boolean disconnected = cluster.disconnect();]]></codeblock>
 
 <p>If the <codeph>ClusterEnvironment</codeph> is shared it needs to be closed manually (see Sharing Resources), but if not (which is the regular case) it gets also shut down.</p>
 
 <p>After a disconnect, it is not possible to open buckets again, so only use it when you are sure that you do not need access to a CouchbaseCluster again. If you only want to close a bucket, you can do that without shutting down everything:</p>
 
-
-<codeblock outputclass="language-java"><![CDATA[Observable<Boolean> close = bucket.close();]]></codeblock>
+<codeblock outputclass="language-java"><![CDATA[Boolean closed = bucket.close();]]></codeblock>
 
 <p>This will only release the resources allocated for this bucket and it is possible to reopen it at a later point.</p>
 
 <p>Especially with disconnect, make sure you wait until it is finished (so everything is shut down cleanly), either by blocking the Observable or using other mechanisms in the subscriber (like a CountDownLatch to orchestrate behavior).</p>
+
+<p>All threads used by the SDK are daemon threads, so even if you do not <codeph>disconnect()</codeph> manually, your JVM will exit. It is very important that you properly shut down the SDK so that remaining operations are finished and nothing is left behind.</p>
 
 		</section>
 		<section>
@@ -117,16 +142,14 @@ CouchbaseCluster cluster = CouchbaseCluster.create();]]></codeblock>
 CouchbaseCluster cluster1 = CouchbaseCluster.create(env, "192.168.56.1");
 CouchbaseCluster cluster2 = CouchbaseCluster.create(env, "192.168.57.10");]]></codeblock>
 
-<p>This ensures that the resources in the environment (thread pools for I/O and computation) are
-				reused. If you pass in your custom environment, it needs to be shut down manually
-				because it's not under the complete control of any cluster. The recommended approach is
-				to first shut down all clusters and after this is done shut down the environment:</p>
+			<p>This ensures that the resources in the environment (thread pools for IO and computation) are reused. Note that if you pass in your custom environment, it needs to be shutdown manually since it's not under the complete control of any cluster. The recommended approach is to first shut down all clusters and once this is done shut down the environment (here using asynchronous code, but you can also loop synchronously):</p>
 
 <codeblock outputclass="language-java"><![CDATA[Observable
-    .from(cluster1, cluster1)
+    .just(cluster1, cluster2)
     .flatMap(CouchbaseCluster::disconnect)
     .last()
-    .flatMap(aBoolean -> env.shutdown()).subscribe();]]></codeblock>
+    .flatMap(aBoolean -> env.shutdown())
+    .subscribe();]]></codeblock>
 
 		</section>
 		<section>
@@ -213,26 +236,6 @@ Certificate fingerprint (SHA1): 3A:BC:48:3C:0F:36:99:EB:35:76:7C:E5:14:DE:89:DE:
 ..... ...xuG.O=.#.........?.Q)8..D...S.W.4.-#....@7...^.Gk.4.t..C+......6..)}......N..m..o.3...d.,.	...W.....U..
 .%v.....4....m*...A.2I.1.&.*,6+..#..#.5]]></codeblock>
 
-		</section>
-		<section>
-			<title>Error handling during connect and disconnect</title>
-
-			<p>- timeouts
-
-- errors on cluster create
-	- URI failures
-	- errors on environment create
-		- could not create threads
-
-
-- errors on bucket open
-	- hosts not found
-	- bucket not found
-	- wrong name/password
-	- ssl not enabled	
-
-- errors on bucket close
-- errors on disconnect</p>
 		</section>
 	</conbody>
 </concept>
