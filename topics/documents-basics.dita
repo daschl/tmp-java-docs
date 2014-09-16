@@ -97,7 +97,7 @@ JsonObject content = JsonObject.empty()
 		<p>The <codeph>JsonDocument</codeph> can then be passed into the various operations on the <codeph>Bucket</codeph>:</p>
 
 <codeblock outputclass="language-java"><![CDATA[JsonDocument walter = JsonDocument.create("user:walter", content);
-Observable<JsonDocument> inserted = bucket.insert(walter);]]></codeblock>
+JsonDocument inserted = bucket.insert(walter);]]></codeblock>
 
 		<p>If you want to read values out of the <codeph>JsonDocument</codeph>, you can use the either typed or untyped getter methods.</p>
 
