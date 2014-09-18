@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE concept
+  PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept xml:lang="en-us" id="concept2677">
+	<title>Tutorial</title>
+	<conbody>
+
+    <section>
+   	 <p>This tutorial builds on the material covered in the Getting Started section and introduces some more advanced concepts to build a complete web application. The full source code for the example is available at <xref href="https://github.com/PaintScratcher/beersample-java2" scope="external">couchbaselabs on GitHub</xref>. The primary focus of this tutorial is to explain the function and theory behind the Couchbase client and how it connects to Couchbase server. Therefore, we will provide the surrounding code that will generate a full web application and its operation is not included in the scope of this tutorial.</p>
+  </section>
+
+  <section>
+    <title>Preview the Application</title>
+    <p>Download the .jar archive and run it using the command <codeph>java -jar couchbaseBeersampleExample.jar </codeph>. You should see the Spring framework start up and begin logging the application, once it has finished initializing you can navigate to <xref href="http://localhost:8081/">http://localhost:8081/</xref> to view the application.</p>
+  </section>
+  <section>
+    <title>Preparation</title>
+    <p>To get ready to build your first app, you need to install Couchbase Server and set up your IDE.</p>
+    <b>Installing Couchbase Server</b>
+    <p>Download the latest <xref href="http://www.couchbase.com/download" scope="external">Couchbase Server 3.0 release</xref> and install it. As you follow the download instructions and setup wizard, make sure you install the beer-sample default bucket as it contains the beer and brewery sample data used in this tutorial.</p>
+    <p>If you already have Couchbase Server 3.0 but do not have the beer-sample bucket installed, open the Couchbase Web Console and select Settings > Sample Buckets. Select the beer-sample checkbox, and then click Create. A notification box in the upper-right corner disappears when the bucket is ready to use.</p>
+    <b>Creating your views</b>
+    <p>Views enable you to index and query data from your database. The beer-sample bucket comes with a small set of predefined view functions, but to add further functionality to our application we will need some more. This is also a very good chance for you to see how you can manage views inside the Couchbase Web Console. For more information on views, see <xref href="http://docs.couchbase.com/couchbase-manual-2.5/#querying-views">Couchbase Developer Guide, Finding Data with Views</xref> and <xref href="http://docs.couchbase.com/couchbase-manual-2.5/#using-the-views-editor">Couchbase Manual, Using the Views Editor</xref>.</p>
+    <p>We want our users to be able to view a list of both beers and breweries. Therefore we we need to define one view function for each type of document that will respond with the relevant information for each query. As such we will be creating two view functions, one for beers and one for breweries. First, the beers;</p>
+    <ol>
+      <li>In Couchbase Web Console, click <b>Views</b></li>
+      <li>From the drop-down list box, choose the <b>beer-sample</b> bucket</li>
+      <li>Click <b>Development Views</b>, and then click <b>Create Development View</b> to define your first view.</li>
+      <li>Give the view the names of both the design document and the actual view. Insert the following names:
+        <ul>
+          <li>Design Document Name: <codeph>_design/dev_beer</codeph></li>
+          <li>View Name: <codeph>by_name</codeph></li>
+        </ul>
+        The next step is to define the <codeph>map</codeph> function and optionally a <codeph>reduce</codeph> function to perform further computation on the index results. In our example, we do not use the <codeph>reduce</codeph> functions at all, but you can play around with reduce functions to see how they work. For more information, see Couchbase Developer Guide, <xref href="http://docs.couchbase.com/couchbase-devguide-2.5/#using-built-in-reduces/">Using Built-in Reduce Functions</xref> and <xref href="http://docs.couchbase.com/couchbase-devguide-2.5/#creating-custom-reduces" >Creating Custom Reduces</xref>.
+      </li>
+      <li>Insert the following JavaScript <codeph>map</codeph> function and click <b>Save</b>.
+          <codeblock outputclass="language-javascript"><![CDATA[
+function (doc, meta) {
+   if(doc.type && doc.type == "beer") {
+     emit(doc.name, doc.brewery_id);
+   }
+}]]></codeblock>
+      </li>
+    </ol>
+
+    <p>Every <codeph>map</codeph> function takes the full document (<codeph>doc</codeph>) and its associated metadata (<codeph>meta</codeph>) as the arguments. Your map function can then inspect this data and <codeph>emit</codeph> the item to a result set to be added to an index. In our case we emit the name of the beer (<codeph>doc.name</codeph>) when the document has a type field and the type is <codeph>beer</codeph>. We also want to use the brewery associated with the beer, so for our value we will emit the <codeph>doc.brewery_id</codeph>.</p>
+    <p>In general, you should try to keep the index as small as possible. You should resist the urge to include the full document with <codeph>emit(meta.id, doc)</codeph>, because it will increase the size of your view indexes and potentially impact application performance. If you need to access the full document or large parts of it, use the <codeph>.document()</codeph> method, which does a <codeph>get()</codeph> call with the document ID in the background.</p>
+    <p>Now we need to provide a similar map function for the breweries. Because you already know how to do this, here is all the information you need to create it is below. An important thing to note is that for our application we do not need a further value other than the brewery name; therefore we emit a <codeph>null</codeph> here.</p>
+    <ol>
+      <li>Design Document Name: <codeph>_design/dev_brewery</codeph></li>
+      <li>View Name: <codeph>by_name</codeph></li>
+      <li>Map Function:
+        <codeblock outputclass="language-javascript"><![CDATA[
+function (doc, meta) {
+   if(doc.type && doc.type == "brewery") {
+     emit(doc.name, null);
+   }
+}]]></codeblock>
+      </li>
+    </ol>
+    <p>The final step is to push the design documents to production mode for Couchbase Server. While the design documents are in development mode, the index is applied only on the local node. See, Couchbase Manual, <xref href="http://docs.couchbase.com/couchbase-manual-2.5/#view-basics">Development and Production Views</xref>. To have the index on the whole data set:</p>
+    <ol>
+      <li>In Couchbase Web Console, click <b>Views</b></li>
+      <li>Click the <b>Publish</b> button on both design document</li>
+      <li>Accept any dialog that warns you from overriding the old view function</li>
+    </ol>
+    <p>For more information about using views for indexing and querying from Couchbase Server, see the following useful resources:</p>
+    <ul>
+      <li>General Information: <xref href="http://docs.couchbase.com/couchbase-manual-2.5/#view-basics">Couchbase Server Manual: Views and Indexes</xref></li>
+      <li>Sample Patterns: to see examples and patterns you can use for views, see <xref href="http://docs.couchbase.com/couchbase-manual-2.5/#view-and-query-pattern-samples">Couchbase Views, Sample Patterns</xref></li>
+      <li>Time-stamp Pattern: many developers frequently ask about extracting information based on date or time. To find out more, see <xref href="http://docs.couchbase.com/couchbase-manual-2.5/#date-and-time-selection">Couchbase Views, Sample Patterns</xref></li>
+    </ul>
+
+    <b>Setting up your IDE</b>
+    <p>In this project will we be making heavy use of <xref href="http://maven.apache.org/" scope="external">Maven</xref> for dependancy management, therefore it is recommended that you familiarise yourself with maven for your chosen IDE or from the commandline. Here is the pom.xml that you can use for full dependancy management:</p>
+        <codeblock outputclass="language-xml"><![CDATA[
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.couchbase</groupId>
+  <artifactId>beersample</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.1.5.RELEASE</version>
+  </parent>
+
+  <dependencies>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-thymeleaf</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.couchbase.client</groupId>
+        <artifactId>java-client</artifactId>
+        <version>2.0.0-BETA2</version>
+    </dependency>
+  </dependencies>
+
+   <repositories>
+    <repository>
+        <id>couchbase</id>
+        <name>couchbase repo</name>
+        <url>http://files.couchbase.com/maven2</url>
+        <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+  </repositories>
+</project>]]></codeblock>
+
+    <p>For reference, here is the directory structure used for this example application:</p>
+    <codeblock outputclass="language-java"><![CDATA[
+|-target
+|-src
+|---com
+|------couchbase
+|---------beersample
+|---------resources
+|------------css
+|---------templates]]></codeblock>
+  <b>Download the framework</b>
+    <p>The framework for the tutorial can be downloaded from <xref href="http://www.example.org/" scope="external">here</xref>. It includes the <xref href="http://spring.io" scope="external">Spring</xref> webframework and the surrounding code that will take our Couchbase connections and form a complete application. The next section of the tutorial will explain the inner workings of the ConnctionManager class, currently blank, that will deal with the applications connections with your Couchbase server.</p>
+  </section>
+
+  <section>
+    <title>Connection Manager</title>
+    <p>The primary focus of this tutorial is the <codeph>ConnectionManager</codeph> class located in the <b>src/com/couchbase/beersample</b> directory. The class will be responsible for starting and stopping the <codeph>CouchbaseClient</codeph> and dealing with all interactions between the application and the Couchbase server. Here is the initial part of the class that deals with connecting to Couchbase:</p>
+    <codeblock outputclass="language-java"><![CDATA[
+public class ConnectionManager {
+
+private static final ConnectionManager connectionManager = new ConnectionManager();
+
+  public static ConnectionManager getInstance() {
+  	return connectionManager;
+  }
+
+  static Cluster cluster = CouchbaseCluster.create();
+  static Bucket bucket = cluster.openBucket("beer-sample");
+
+  public static void disconnect() {
+  	cluster.disconnect().toBlocking().single();
+  }]]></codeblock>
+
+  <p>As discussed in  the managing connections section of the documentation, it is important to reuse the Couchbase connections so that the underlying resources are not duplicated for each connection. Therefore the ConnectionManager class has been created as a <b>singleton</b>. The Spring framework automatically creates all classes as singletons automatically, but the class is also written to be a singleton regardless of the framework you are using. The important message is that you only create one connection to the Couchbase cluster and one connection to each bucket you are using, then statically reference those connections for each use. The line <codeph>ConnectionManager connectionManager = new ConnectionManager();</codeph> and the <codeph>getInstance()</codeph> method are used to create a single instance of the class and allow other classes to access the singleton.</p>
+
+  <p>The line <codeph>static Cluster cluster = CouchbaseCluster.create();</codeph> creates a new Couchbase connection object and makes the initial connection to the cluster. In this example we have not supplied any IP addresses to connect to as we are running a Couchbase server on the local machine. However, if you are using a cluster external to your local machine you can pass the ConnectionManager method a string, several strings or a list of strings so that it can connect to multiple nodes should a connection to a single node fail.</p>
+
+  <p>We next need to connect to the bucket that is storing our data, in this case we are using the <b>beer-sample</b> bucket provided as part of your Couchbase install. As with connecting to the cluster it is important to create a single connection and re-use it multiple times throughout your code. In this line <codeph>static Bucket bucket = cluster.openBucket("beer-sample");</codeph> we are creating a connection to the bucket. As covered in other areas of the documentation, the Couchbase Java SDK provides both <b>synchronous</b> and <b>asynchronous</b> API's that allow you to easily harness the power of asynchronous computation while maintaining the simplicity of synchronous operations. In this case we are choosing to connect to both the cluster and the bucket synchronously as most of our application will be required to be synchronous, loading data before a webpage can be generated. However, the asynchronous API is explained later on for use in creating view queries.</p>
+
+  <p>The disconnect method is included even though it is not explicitly called in this example. It is worth noting that when you call the disconnect() method on the cluster it will, like many other commands, return an observable that you can use to verify that an operation has completed. Once again we call .toBlocking and .single to synchronise the operation. Although the method given in this example does not return the object generated by the disconnect operation, we could modify it to and use the object to ensure the cluster has disconnected before moving on.</p>
+
+  <p>Now that we have dealt with connecting to the cluster and the bucket we can move onto completing some useful operations, beginning with querying the database for a single document. We will be using the following code, which connects to the Couchbase server, searches for a given key id and returns the associated JsonDocument.</p>
+  <codeblock outputclass="language-java"><![CDATA[
+public static JsonDocument getItem(String id) {
+	JsonDocument response = null;
+	try {
+		response = bucket.get(id);
+	} catch (NoSuchElementException e) {
+		System.out.println("ERROR: No element with message: "
+				+ e.getMessage());
+		e.printStackTrace();
+	}
+	return response;
+}]]></codeblock>
+
+<p>When data is stored in Couchbase as Json, it will be converted by the Java SDK into a <b>JsonDocument</b> object. This allows you to use any Json library, including the one built into the Couchbase SDK, to access, modify and re-save the data held in the document. This makes working with data with Couchbase very simple as you have direct access to the data as it is stored in the database, allowing for rapid operations from both the client and the server. Another important aspect of this code is the error checking, here we are catching the <codeph>NosuchElementException</codeph> which is generated when the given key id is not valid for the current bucket, such as if the key simply does not exist or has been previously deleted. Although the SDK will automatically handle many error conditions, it is important to ensure that your application can handle the errors that the SDK will pass up to it.</p>
+
+<p>Next is a method to update a Json document stored in Couchbase, here is the full code:</p>
+  <codeblock outputclass="language-java"><![CDATA[
+public static void updateItem(JsonDocument doc) {
+	bucket.upsert(doc);
+}]]></codeblock>
+<p>The delete method is very similar to the get method, as you can see by the code below. It is important to note that we are providing both a key id to the .remove method for the bucket as well as a second parameter. The second parameter is a <b>durability requirement</b>, and is covered in more detail in the document-updating section of the documentation. Briefly though, it allows you to control the performance, persistence relationship. By default, the server will acknowledge the operation as soon as the document has reached its cache layer, this provides the best performance as the client can receive a response very quickly. However, in some situations you want or need greater assurances that an operation has completed and so you can specify at what point during the persistence process the server will respond that the operation has completed. In this case, although performance is not a big concern for us, we know that view operations only use data that has been persisted to disk. Therefore, if a user was to delete a beer and immediately load the list of beers again, it is possible that the delete command would not have been persisted to disk and that the deleted beer would still appear in the list. As this could be confusing to the user we are ensuring that the deletion has been persisted to disk before moving on. Secondly, it  it may be confusing that we are returning a value</p>
+  <codeblock outputclass="language-java"><![CDATA[
+public static void deleteItem(String id) {
+	try {
+		bucket.remove(id, PersistTo.MASTER);
+	} catch (NoSuchElementException e){
+		System.out.println("ERROR: No element with message: "
+      + e.getMessage());
+	}
+}]]></codeblock>
+
+<p>The next section of the ConnectionManager class is going to handle making a view query to the Couchbase cluster to allow us to display a list of both the beers and the breweries. This code will call upon many of the things we have used in previous methods. The first thing to consider when designing a view is the data requirement for the operation. Due to the increase in amount of data being sent a view query will be slower than a basic get operation. Therefore, we need to consider what data we need from the view so that we only <codeph>emit</codeph> the values necessary. For our application we have written two view functions, one for beers and one for breweries. As described in the Creating Your Views section of this tutorial for the beers view we are emitting the name of the beer and the id of it's associated brewery. For the breweries we are only emitting the name of the brewery. As the view query is more complex than a get operation, it is advantageous to leverage the asynchronous API in the SDK. To achieve this we will simply use the <codeph>.async</codeph> method on the bucket, this tells the SDK to use the underlying aynchronous operations and not to apply any blocking code to it. This allows us far greater control over the execution of the operation. Additionally, we will now be dealing with observables, which are named here as 'Async' objects. Here is the full code for the getView method:</p>
+  <codeblock outputclass="language-java"><![CDATA[
+public static ArrayList<AsyncViewRow> getView(String designDoc, String view) {
+	ArrayList<AsyncViewRow> result = new ArrayList<AsyncViewRow>();
+	final CountDownLatch latch = new CountDownLatch(1);
+	System.out.println("METHOD START");
+
+	bucket.async().query(
+		ViewQuery.from(designDoc, view).limit(20).stale(Stale.FALSE))
+		.doOnNext(new Action1<AsyncViewResult>() {
+			@Override
+			public void call(AsyncViewResult viewResult) {
+				if (!viewResult.success()) {
+					System.out.println(viewResult.error());
+				} else {
+					System.out.println("Query is running!");
+				}
+			}
+		}).flatMap(new Func1<AsyncViewResult, Observable<AsyncViewRow>>() {
+			@Override
+			public Observable<AsyncViewRow> call(AsyncViewResult viewResult) {
+				return viewResult.rows();
+			}
+		}).subscribe(new Subscriber<AsyncViewRow>() {
+			@Override
+			public void onCompleted() {
+				latch.countDown();
+			}
+			@Override
+			public void onError(Throwable throwable) {
+				System.err.println("Whoops: " + throwable.getMessage());
+			}
+			@Override
+			public void onNext(AsyncViewRow viewRow) {
+				result.add(viewRow);
+			}
+		});
+	try {
+		latch.await();
+	} catch (InterruptedException e) {
+		e.printStackTrace();
+	}
+	return result;
+}]]></codeblock>
+
+<p>As you can see the method getView is returning an ArrayList of <b>ViewRow</b>'s. A view query will return an observable object called a <b>ViewResult</b>, this includes information about the view and holds sub-objects called ViewRow's. These are very similar to rows in a table with the key and value emitted from the view function. By returning them in an iterable structure such as an array list we are allowing the application easy access to the row data without any further interaction with the Couchbase client. The first section of the view query we are calling the .query() method on the open asynchronous bucket, passing a ViewQuery object to it and both the design document and the view name to the query. In addition, we have added a limit of 20 results to the query so that we are not requesting more results from the view than we will be using on one page. Finally, we are calling the <b>.stale()</b> method. This method allows us to control how couchbase handles updating the view result. The default behaviour is to return the view result and then update the index, this means that any documents that have not been fully propagated to disk will not be included in the view result. By providing the Stale.FALSE parameter we are telling couchbase to ensure that the index is fully up to date before returning the view, so that we can be sure that the result handed back to us has the latest data from the database.</p>
+<p>At this point it is important to understand that the view operation is fully asynchronous until you explicitly synchronise the operation by using a blocking mechanism. We are yet to do that at this point in the code and so we are dealing with observables, as discussed in other areas of this documentation observables operate primarily on events. The <b>.doOnNext</b> method leverages this and will be called whenever the onNext method of the observable is triggered, which in this case is whenever the query returns a ViewResult object, which is one of the first things the Couchbase client will pass onto the observable. As soon as the .doOnNext method is called we check the <b>.success()</b> method of the ViewResult to ensure that the server is able to handle the request and there are no errors.</p>
+<p>We can now start operating directly on the data that is being sent from the Couchbase server, we do this by running a function called <b>.flatmap</b> which takes an iterable object, applies a function to each entry in it and returns another iterable. In this case we are asking it to take the ViewResult and return every ViewRow from it.</p>
+<p>The next step is to consume the observable by subscribing to it. We achieve this by calling the <b>.subscribe</b> method with a subscriber that reacts to every new ViewRow in the observable. We can then override the subscribers three methods such that they are called for every new row (.onNext), if there is an error (.onError) and when the final ViewRow has been received and the observable is completed (.onCompelted). In the .onNext() method we are simply taking the viewRow that has been picked up by the subscriber and adding it to the ArrayList object that we created earlier, onError() is called if the observable encounters an issue that it cannot recover from, and in this case we simply print out a message to the error log. Finally, the <b>onCompleted()</b> method is called once at the very end of the operation when the observable has finished and there is no more data to be sent, after this method is called the observable will terminate and the code will continue. However, as discussed earlier the operation is asynchronous at this point and so the code execution will continue in the background while the observable is still running. To ensure that the page will not load before the view has been fully received and processed we need to block the execution on the thread. To achieve this we need to use a countdown lock which can be initialized to an integer and will block the thread until the lock has been counted down to 0. As we are only calling the latch to countdown in the onComplete() method of the subscriber we need to initialize the clock to 1, such that when it is counted down once it will have a value of 0 and therefore released. We have wrapped the release point (latch.await()) in a try catch to ensure that if the latch cannot complete for any reason it will be caught.</p>
+
+  </section>
+	</conbody>
+</concept>
