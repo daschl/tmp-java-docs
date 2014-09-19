@@ -14,13 +14,14 @@
       <conbody>
       	<p>Here are some of the highlights:</p>
         <ul>
-       	  <li>Reworked API to be document oriented and cross-plattform with other SDKs</li>
+       	  <li>Reworked API to be document oriented and cross-platform with other SDKs</li>
           <li>Asynchronous, reactive API based on RxJava</li>
-          <li>Synchronous wrapper around the asynchronous API for convenience.</li>
-          <li>Support for Couchbase Server 3.0, including encryption (SSL)</li>
-          <li>Stream-based View and N1QL query APIs.</li>
-          <li>First-class JSON support, as well as Legacy and other optimized documents.</li>
-          <li>Interoperability with other 2.0-type SDKs without code changes.</li>
+          <li>Synchronous wrapper around the asynchronous API for convenience</li>
+          <li>Support for Couchbase Server 3.0, including encryption via Secure Sockets Layer
+						(SSL)</li>
+          <li>Stream-based view and N1QL query APIs</li>
+          <li>First-class JSON support, as well as Legacy and other optimized documents</li>
+          <li>Interoperability with other Couchbase 2.0 SDKs without code changes</li>
         </ul>
       </conbody>
     </concept>
@@ -30,19 +31,21 @@
       <conbody>
         <ul>
        		<li>
-       	  		<xref href="https://www.couchbase.com/issues/browse/JCBC-563" format="html" scope="external">JCBC-563</xref>: View query will lock up after first (few) attempts.
-       	  		<p></p>
-       	  		<p>Sometimes a view response gets stuck in the core. Subsequent requests have been identified to work again, so a workaround until it is
-       	  		fixed in the next bugfix release is to retry after the operation times out. Make sure to apply a timeout when using the asynchronous
-       	  		API and maybe also use a shorter timeout than the default (which is 75s for views).</p>
-       	  		<p>A shorter timeout can be applied like:</p>
-       	  		<codeblock outputclass="language-java"><![CDATA[ViewResult query = bucket.query(ViewQuery.from("design", "view"), 10, TimeUnit.SECONDS);]]></codeblock>
-       	  		<p>If the async API is used, make sure to apply a timeout:</p>
-<codeblock outputclass="language-java"><![CDATA[Observable<AsyncViewResult> result = bucket
+						<xref href="https://www.couchbase.com/issues/browse/JCBC-563" format="html"
+							scope="external">JCBC-563</xref>: View query will lock up after the first few
+						attempts. <p>Sometimes a view response gets stuck in the core. Subsequent requests
+							have been identified to work again, so a workaround until it is fixed in the
+							next bug-fix release is to retry after the operation times out. Make sure to
+							apply a timeout when using the asynchronous API and maybe also use a shorter
+							timeout than the default (which is 75 seconds for views).</p>
+						<p>A shorter timeout can be applied:</p>
+						<codeblock outputclass="language-java"><![CDATA[ViewResult query = bucket.query(ViewQuery.from("design", "view"), 10, TimeUnit.SECONDS);]]></codeblock>
+						<p>If the asynchronous API is used, make sure to apply a timeout:</p>
+						<codeblock outputclass="language-java"><![CDATA[Observable<AsyncViewResult> result = bucket
     .async()
     .query(ViewQuery.from("design", "view"))
     .timeout(10, TimeUnit.SECONDS);]]></codeblock>
-       		</li>
+					</li>
        	</ul>
       </conbody>
     </concept>
