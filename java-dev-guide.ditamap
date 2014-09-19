@@ -13,6 +13,7 @@
 		<topicref href="topics/hello-couchbase.dita" />
 	</topicref>
 
+	<topicref href="topics/tutorial.dita" />
 	
 	<topicref href="topics/managing-connections.dita" />
 	<topicref href="topics/documents.dita">

@@ -6,7 +6,7 @@
 	<conbody>
 
     <section>
-   	 <p>This tutorial builds on the material covered in the Getting Started section and introduces some more advanced concepts to build a complete web application. The full source code for the example is available at <xref href="https://github.com/PaintScratcher/beersample-java2" scope="external">couchbaselabs on GitHub</xref>. The primary focus of this tutorial is to explain the function and theory behind the Couchbase client and how it connects to Couchbase server. Therefore, we will provide the surrounding code that will generate a full web application and its operation is not included in the scope of this tutorial.</p>
+   	 <p>This tutorial builds on the material covered in the Getting Started section and introduces some more advanced concepts to build a complete web application. The full source code for the example is available at <xref href="https://github.com/couchbaselabs/beersample-java2" scope="external">couchbaselabs on GitHub</xref>. The primary focus of this tutorial is to explain the function and theory behind the Couchbase client and how it connects to Couchbase server. Therefore, we will provide the surrounding code that will generate a full web application and its operation is not included in the scope of this tutorial.</p>
   </section>
 
   <section>
@@ -99,18 +99,9 @@ function (doc, meta) {
     <dependency>
         <groupId>com.couchbase.client</groupId>
         <artifactId>java-client</artifactId>
-        <version>2.0.0-BETA2</version>
+        <version>2.0.0</version>
     </dependency>
   </dependencies>
-
-   <repositories>
-    <repository>
-        <id>couchbase</id>
-        <name>couchbase repo</name>
-        <url>http://files.couchbase.com/maven2</url>
-        <snapshots><enabled>false</enabled></snapshots>
-    </repository>
-  </repositories>
 </project>]]></codeblock>
 
     <p>For reference, here is the directory structure used for this example application:</p>
